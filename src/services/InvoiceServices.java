@@ -14,13 +14,15 @@ public class InvoiceServices {
 
     public void addInvoice(Customer customer, Vehicle vehicle, List<Service> selectedServices) throws SQLException {
         Connection con = db.getConnection();
-        PreparedStatement statement = con.prepareStatement("INSERT INTO invoices (customer_id,vehicles_id,service_id) VALUES (?,?,?)");
+        PreparedStatement statement = con.prepareStatement("INSERT INTO invoices (customer_id, vehicles_id, service_id) VALUES (?, ?, ?)");
 
-        for(int i = 0; i<selectedServices.size(); i++){
-            statement.setInt(1,customer.getId());
-            statement.setInt(2,vehicle.getId());
-            statement.setInt(3,selectedServices.get(i).getId());
+        for (Service service : selectedServices) {
+            statement.setInt(1, customer.getId());
+            statement.setInt(2, vehicle.getId());
+            statement.setInt(3, service.getId());
+            statement.executeUpdate();
         }
+        statement.close();
         con.close();
     }
 
@@ -33,17 +35,31 @@ public class InvoiceServices {
 //
 //    }
 
-    public List<Invoice> getAllInvoice() throws SQLException{
+    public List<Invoice> getAllInvoice() throws SQLException {
         Connection con = db.getConnection();
-        List<Invoice> allInvoices= new ArrayList<>();
+        List<Invoice> allInvoices = new ArrayList<>();
         Statement statement = con.createStatement();
-        ResultSet Rs =  statement.executeQuery("SELECT * FROM invoices");
+        ResultSet rs = statement.executeQuery(
+                "SELECT i.id, c.id AS customer_id, c.name, c.phone, s.id AS service_id, s.description, s.cost " +
+                        "FROM invoices i " +
+                        "JOIN customers c ON i.customer_id = c.id " +
+                        "JOIN services s ON i.service_id = s.id"
+        );
 
+        while (rs.next()) {
+            Customer customer = new Customer(rs.getInt("customer_id"), rs.getString("name"), rs.getString("phone"));
+            Service service = new Service(rs.getInt("service_id"), rs.getString("description"), rs.getDouble("cost"));
+            Invoice invoice = new Invoice(rs.getInt("id"), customer, service);
+            allInvoices.add(invoice);
+        }
 
+        rs.close();
+        statement.close();
+        con.close();
         return allInvoices;
-
-
     }
+
+
 
 
 }

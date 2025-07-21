@@ -38,7 +38,6 @@ public class Service {
 
     @Override
     public String toString() {
-        int i = 0;
-        return "[ " + i++ + Description + cost + " ]";
+        return "Service{id=" + id + ", description='" + Description + "', cost=" + cost + "}";
     }
 }
